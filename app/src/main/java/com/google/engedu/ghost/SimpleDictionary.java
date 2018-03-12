@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.Random;
 
 public class SimpleDictionary implements GhostDictionary {
     private ArrayList<String> words;
+
+    Random random=new Random();
 
     public SimpleDictionary(InputStream wordListStream) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(wordListStream));
@@ -47,29 +49,37 @@ public class SimpleDictionary implements GhostDictionary {
     @Override
     public String getAnyWordStartingWith(String prefix) {
         if (prefix == null||prefix.equals("")) {
-            Random random = new Random();
+
             return words.get(random.nextInt(words.size()));
+        } else {
+
+                int low = 0, high = words.size() - 1;
+                int mid;
+                String t;
+
+                while(low < high) {
+                    mid = (low + high) / 2;
+                    t = words.get(mid);
+                    if(t.startsWith(prefix)) {
+                        return t;
+                    } else if(prefix.compareTo(t) > 0) {
+                        // LHS is bigger
+                        low = mid + 1;
+                    } else {
+                        // RHS is bigger
+                        high = mid - 1;
+                    }
+                }
+
+                return null;
+            }
         }
-        int low = 0, high = words.size() - 1, mid;
-        while (low <= high) {
-            mid=(low+high)/2;
 
-
-            if (words.get(mid).startsWith(prefix))
-                return words.get(mid);
-            if(words.get(mid).compareTo(prefix)>0) {
-                high = mid - 1;
-            }   else {
-                low = mid + 1;
-            }
-            }
-
-        return null;
-    }
 
     @Override
     public String getGoodWordStartingWith(String prefix) {
         String selected = null;
         return selected;
     }
+
 }

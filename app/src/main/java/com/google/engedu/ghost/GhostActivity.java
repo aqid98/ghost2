@@ -46,6 +46,7 @@ public class GhostActivity extends AppCompatActivity {
     private TextView GameStatus,GhostText,label;
     private Button Challenge, Restart;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +64,7 @@ public class GhostActivity extends AppCompatActivity {
          **/
 
         try {
-            dictionary = new FastDictionary(assetManager.open("words.txt"));
+            dictionary = new SimpleDictionary(assetManager.open("words.txt"));
         } catch (IOException e) {
             Toast toast = Toast.makeText(this, "Cannot Load Dictionary ", Toast.LENGTH_LONG);
             toast.show();
@@ -77,30 +78,32 @@ public class GhostActivity extends AppCompatActivity {
         });
         Restart.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                onStart(null);
+            public void onClick(View view) {
+                onStart(view);
             }
         });
     }
-        private void challenge()
-        {
-            String word = GhostText.getText().toString();
-            if(!word.equals("")) {
-                if (word.length() >= 4 && dictionary.isWord(word)) {
-                    GameStatus.setText("Congratulations, You Win! " + word + " is a real word");
-                    return;
-                }
-                String longWord = dictionary.getGoodWordStartingWith(word);
-                if (longWord != null) {
-                    GameStatus.setText("You Lose! A possible word is " + longWord);
-                } else {
-                    GameStatus.setText("Congratulations! You Win");
-                }
+        private void challenge() {
 
+            String ghostText = GhostText.getText().toString();
+
+            if (ghostText.length() >= 4 && dictionary.isWord(ghostText)) {
+                GameStatus.setText("User Won");
                 Challenge.setEnabled(false);
+            } else {
+                String k = dictionary.getAnyWordStartingWith(ghostText);
+                Log.d("Ghost", "Word starting with " + ghostText + "is " + k);
 
+                if(k == null) {
+                    GameStatus.setText("User won");
+                    Challenge.setEnabled(false);
+                } else {
+                    GameStatus.setText("Computer won as Possible word - "+k);
+                    Challenge.setEnabled(false);
+                }
             }
-        }
+            }
+
 
 
 
@@ -150,36 +153,31 @@ public class GhostActivity extends AppCompatActivity {
 
     private void computerTurn() {
 
-        GameStatus.setText(COMPUTER_TURN);
-        String word = GhostText.getText().toString();
-        String next;
-        if (dictionary.isWord(word) && word.length() >= 4) {
-            Log.d("Computer Tag", "Computerturn:true");
-            GhostText.setText(word);
-            GameStatus.setText(word);
-            label.setText("Computer Won");
+        String ghostText = GhostText.getText().toString();
+        Log.d("Ghost", "Word: " + ghostText);
+
+        if (ghostText.length() >= 4 && dictionary.isWord(ghostText)) {
+            GameStatus.setText("Computer Won");
+            Challenge.setEnabled(false);
         } else {
-            next = dictionary.getAnyWordStartingWith(word);
-            if(next!=null)
-            {
-                String letter=next.substring(word.length(),word.length()+1);
-                word=word+letter;
-                GhostText.setText(word);
-                userTurn=true;
-             label.setText(USER_TURN);
+            String k = dictionary.getAnyWordStartingWith(ghostText);
+            Log.d("Ghost", "Word starting with " + ghostText + " is " + k);
 
-            }
-            else{
-
-                label.setText("Computer Won");
+            if(k == null) {
+                GameStatus.setText("Computer Won ");
                 Challenge.setEnabled(false);
+            } else {
+                GhostText.append(k.charAt(ghostText.length()) + "");
+                userTurn = true;
+                GameStatus.setText(USER_TURN);
+
             }
         }
+    }
 
-    }
-    private void addTextToGame(char c){
-       GhostText.setText(GhostText.getText().toString() + c);
-    }
+
+
+
 
     /**
      * Handler for user key presses.
@@ -189,20 +187,21 @@ public class GhostActivity extends AppCompatActivity {
      */
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        char c = (char) event.getUnicodeChar();
+        if (userTurn) {
+            userTurn = false;
 
+            char k = (char) event.getUnicodeChar();
+            if (Character.isLetter(k)) {
+                GhostText.append(k+ "");
+                userTurn = false;
 
-        Log.d("onKeyUp", "char displayed is " + c);
-        if (Character.isLetter(c)) {
-            addTextToGame(c);
-            label.setText(COMPUTER_TURN);
-            userTurn=false;
-            computerTurn();
+                computerTurn();
+
+                return true;
             }
-            else (Toast.makeText(this, "Entered an invalid Char", Toast.LENGTH_LONG)).show();
+        }
 
         return super.onKeyUp(keyCode, event);
-
     }
 
 
